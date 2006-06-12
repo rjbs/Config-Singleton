@@ -1,0 +1,18 @@
+abstract: Easy configuration base class for your App.
+author: John Cappiello <jcap@cpan.org>
+build_requires: 
+  Test::More: 0
+distribution_type: module
+generated_by: Module::Install version 0.61
+license: perl
+name: App-Config
+no_index: 
+  directory: 
+    - inc
+    - t
+requires: 
+  Class::Accessor: 0
+  Class::Default: 0
+  File::HomeDir: 0
+  YAML: 0
+version: 0.01
