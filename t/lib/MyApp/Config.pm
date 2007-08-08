@@ -1,5 +1,13 @@
 package MyApp::Config;
-use base App::Config;
+
+use App::Config -setup => {
+  filename => 'myapp.yml',
+  template => {
+    hostname => 'localhost',
+    username => undef,
+    charset  => 'ISO-8859-1',
+  },
+};
 
 =head1 SETTINGS
 
@@ -20,13 +28,5 @@ the charset for MyApp
 =back 
 
 =cut
-
-sub _template {
-  return { 
-    hostname => 'localhost',
-    username => undef,
-    charset  => 'ISO-8859-1',
-  };
-};
 
 1;
