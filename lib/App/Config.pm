@@ -248,7 +248,7 @@ L<http://search.cpan.org/dist/App-Config>
 RJBS C<< <rjbs at cpan.org> >> not only wrote the inspiration for this in
 Rubric::Config, but he also basically wrote the majority of the implementation
 here, and even provided extensions of what he knew I wanted it to do, even when
-I said I didn't need that yet. In the end it ended up beign extremely elegant,
+I said I didn't need that yet. In the end it ended up being extremely elegant,
 which I can say without being boastful, because he wrote the elegant bits.
 
 =head1 COPYRIGHT & LICENSE
