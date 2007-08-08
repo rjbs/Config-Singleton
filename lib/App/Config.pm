@@ -3,12 +3,26 @@ package App::Config;
 use warnings;
 use strict;
 
-use Data::Dumper; # XXX temporary, presumably
-
 use Cwd qw(realpath);
 use File::Basename;
 use File::HomeDir qw(home);
 use YAML qw(LoadFile);
+
+use Sub::Exporter -setup => {
+  groups     => [ setup => \'_build_config_methods' ],
+};
+
+=head1 NAME
+
+App::Config - Easy configuration base class for your App.
+
+=head1 VERSION
+
+Version 0.01
+
+=cut
+
+our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
@@ -27,11 +41,23 @@ Elsewhere...
   use YourApplication::Config 'my_instance_config.yml';
   my $foo = YourApplication::Config->foo;
 
-=cut 
 
-use Sub::Exporter -setup => {
-  groups     => [ setup => \'_build_config_methods' ],
-};
+=head1 DESCRIPTION
+
+App::Config provides a base class for access to configuration data for your
+app. The basic implementation stores its configuration in YAML in a text
+file found in all the usual places. By default, App::Config looks for
+myapp.yml, but an alternate filename may be passed when using the module.
+
+This was initially Rubric::Config by RJBS C<< <rjbs at cpan.org> >>.
+
+=head1 METHODS
+
+=head2 _build_config_methods
+
+Initialize all the methods for our new class.
+
+=cut
 
 # this is a group generator
 sub _build_config_methods {
@@ -61,6 +87,13 @@ sub _build_config_methods {
   return \%sub;
 }
 
+
+=head2 _build_accessor
+
+Build accessors for all of $template
+
+=cut
+
 sub _build_accessor {
   my ($class, $attr, $arg) = @_;
   return sub {
@@ -71,6 +104,16 @@ sub _build_accessor {
 			: $arg->{$attr}
   };
 }
+
+=head2 _build_config_filename
+
+Returns the method later referred to as config_filename.
+
+config_filename, deduces what the name of the config file it should look for
+will be.  Was it passed in, or should we guess based on the module name?
+
+=cut
+
 
 sub _build_config_filename {
   my ($class, $arg) = @_;
@@ -89,7 +132,15 @@ sub _build_config_filename {
   }
 }
 
-# this is a generator, and needs to return a sub
+=head2 _build_config_from_file
+
+Returns the method later referred to as config_from_file.
+
+config_from_file returns the config data, if loaded.  If it hasn't already been
+loaded, it finds and parses the configuration file, then returns the data.
+
+=cut
+
 sub _build_config_from_file {
   my ($app_config, $arg) = @_;
  
@@ -151,86 +202,6 @@ sub _build_import {
   }
 }
 
-=head1 NAME
-
-App::Config - Easy configuration base class for your App.
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
-
-our $VERSION = '0.01';
-
-=head1 SYNOPSIS
-
-    package MyApp::Config;
-    use base App::Config "myapp.yml";
-
-    =head1 SETTINGS
-
-    =over 4
-    
-    =item * hostname
-
-    the hostname to connect to for MyApp
-
-    =item * username
-
-    the username to login with
-
-    =item * charset
-
-    the charset for MyApp
-    
-    =back 
-
-    =cut
-
-    my $template = {
-      hostname => 'localhost',
-      username => undef,
-      charset  => 'ISO-8859-1',
-    };
-
-  Elsewhere...
-    
-    use MyApp::Config;
-    
-    MyApp->connect( MyApp::Config->localhost,
-                    MyApp::Config->username );
-  
-    ...
-
-=head1 DESCRIPTION
-
-App::Config provides a base class for access to configuration data for your
-app. The basic implementation stores its configuration in YAML in a text
-file found in all the usual places. By default, App::Config looks for
-myapp.yml, but an alternate filename may be passed when using the module.
-
-This was initially Rubric::Config by RJBS C<< <rjbs at cpan.org> >>.
-
-=cut
-
-=head1 METHODS
-
-These methods are used by the setting accessors, internally:
-
-=head2 _load_config
-
-This method returns the config data, if loaded.  If it hasn't already been
-loaded, it finds and parses the configuration file, then returns the data.
-
-=cut
-=head2 make_ro_accessor
-
-App::Config isa Class::Accessor, and uses this sub to build its setting
-accessors.  For a given field, it returns the value of that field in the
-configuration, if it exists.  Otherwise, it returns the default for that field.
-
-=cut
 =head1 AUTHOR
 
 John Cappiello, C<< <jcap at cpan.org> >>
@@ -273,6 +244,12 @@ L<http://search.cpan.org/dist/App-Config>
 =back
 
 =head1 ACKNOWLEDGEMENTS
+
+RJBS C<< <rjbs at cpan.org> >> not only wrote the inspiration for this in
+Rubric::Config, but he also basically wrote the majority of the implementation
+here, and even provided extensions of what he knew I wanted it to do, even when
+I said I didn't need that yet. In the end it ended up beign extremely elegant,
+which I can say without being boastful, because he wrote the elegant bits.
 
 =head1 COPYRIGHT & LICENSE
 

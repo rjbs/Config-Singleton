@@ -1,10 +1,14 @@
 Changes
 MANIFEST
-META.yml # Will be created by "make dist"
 Makefile.PL
 README
+etc/myapp.yml
 lib/App/Config.pm
 t/00-load.t
+t/01-usage.t
+t/02-custom_filename.t
 t/boilerplate.t
+t/etc/my_custom.yml
+t/lib/MyApp/Config.pm
 t/pod-coverage.t
 t/pod.t
