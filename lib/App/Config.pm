@@ -157,7 +157,9 @@ sub _build_config_from_file {
     my $path = dirname(realpath($0));
 
     # TODO will make this configurable later
-    my @locations = ( "./",
+    my @locations = ( 
+                      '',
+                      "./",
                       "../",
                       "$path/",
                       "$path/../etc/",
