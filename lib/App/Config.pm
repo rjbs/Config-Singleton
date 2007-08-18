@@ -144,6 +144,13 @@ sub _build_config_methods {
   $sub{config_from_file} = $self->_build_config_from_file($arg);
   $sub{template}         = sub { $arg->{template} };
 
+  # XXX: implement default obj -- rjbs, 2007-08-18
+  my $default;
+  $sub{_self} = sub {
+    return $_[0] if ref $_[0];
+    return $default ||= (bless {} => shift);
+  };
+
   # the import method generated will, I think, exist only to let you override 
   # the default filename
   $sub{import}           = $self->_build_import($arg);
@@ -163,8 +170,9 @@ sub _build_config_methods {
 # Build accessors for all of $template
 sub _build_accessor {
   my ($class, $attr, $arg) = @_;
+
   return sub {
-    my $self  = shift;
+    my $self  = shift->_self;
     
     exists $self->config_from_file->{$attr}
          ? $self->config_from_file->{$attr}
@@ -180,10 +188,13 @@ sub _build_config_filename {
   my ($class, $arg) = @_;
 
   sub {
-    my ($class) = @_;
+    my ($self) = @_;
+    my $class = ref $self ? ref $self : $self;
   
     unless ($arg->{filename}) {
-      my $module_base =~ s/::\w+\z//; # remove final part (A::Config -> A)
+      # remove final part (A::Config -> A)
+      (my $module_base = $class) =~ s/::\w+\z//;
+
       $module_base =~ s/::/_/g;
       $arg->{filename} = $ENV{uc($module_base) . '_CONFIG_FILE'}
                       || lc($module_base) . '.yml';
@@ -203,6 +214,8 @@ sub _build_config_from_file {
  
   my $config;
   return sub {
+    my ($self) = shift->_self;
+
     return $config if $config;
     
     my $class = shift;
