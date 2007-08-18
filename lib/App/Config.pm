@@ -225,7 +225,6 @@ sub _build_config_from_file {
 
     my $file_data = YAML::Syck::LoadFile($config_file);
     $config = $app_config->_merge_data($class->template, $file_data);
-    $arg->{_loaded_config} = $config_file;
     return $config;
   }
 }
@@ -264,14 +263,7 @@ sub _build_import {
 
   return sub {
     my ($self, $filename) = @_;
-
-    if ($filename) {
-      if ($arg->{_loaded_config} and $arg->{_loaded_config} ne $filename) {
-        Carp::croak "can't change default filename; already loaded $arg->{_loaded_config}";
-      }
-      $arg->{filename} = $filename;
-    }
-    $self->config_from_file;
+    $arg->{filename} = $filename if $filename;
   }
 }
 
