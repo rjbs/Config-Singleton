@@ -100,18 +100,13 @@ Then these are the results of method calls on Your::Config:
   Your::Config->path;     # qw(/var/spool/jobs  /home/rjbs/spool/jobs)
 
 The configuration file is found by looking for the given name in the following
-paths (LOC is the location of the program being run, found in C<$0>):
+paths:
 
   ./
   ../
-  LOC/
-  LOC/../etc/
   ~/
   /usr/local/etc/
   /etc/
-
-You can change the paths checked by providing a F<path> argument in the setup
-arguments.
 
 If you'd rather look for a different filename, you can specify it when using
 Your::Config:
@@ -210,12 +205,22 @@ sub _build_config_from_file {
       unless keys %{$class->template};
  
     my $config_file;
+    my $home = File::HomeDir->my_home;
+    my $path = dirname(realpath($0));
+
+    # TODO will make this configurable later
+    my @locations = (
+      q{},
+      q{./},
+      q{../},
+      qq{$path/},
+      qq{$path/../etc/},
+      qq{$home/.},
+      q{/usr/local/etc/},
+      q{/etc/},
+    );
 
     my $config_filename = $class->config_filename; 
-
-    my @locations = $arg->{path}
-                  ? @{ $arg->{path} }
-                  : $app_config->_default_path;
 
     do {
       die "Config file not found: $config_filename" unless scalar(@locations);
@@ -228,22 +233,6 @@ sub _build_config_from_file {
     $arg->{_loaded_config} = $config_file;
     return $config;
   }
-}
-
-sub _default_path {
-  my $home = File::HomeDir->my_home;
-  my $path = dirname(realpath($0));
-
-  my @locations = (
-    q{},
-    q{./},
-    q{../},
-    qq{$path/},
-    qq{$path/../etc/},
-    qq{$home/.},
-    q{/usr/local/etc/},
-    q{/etc/},
-  );
 }
 
 # In the future, using Clone here might be a good idea to avoid
