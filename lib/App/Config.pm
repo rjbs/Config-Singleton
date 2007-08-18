@@ -270,8 +270,8 @@ sub _build_import {
         Carp::croak "can't change default filename; already loaded $arg->{_loaded_config}";
       }
       $arg->{filename} = $filename;
+      $self->config_from_file;
     }
-    $self->config_from_file;
   }
 }
 
