@@ -141,6 +141,20 @@ sub _build_config_methods {
 
   my %sub; # This is the set of subs we're going to install in config classes.
 
+  $sub{default_filename_for_class} = sub {
+    my ($invocant) = @_;
+    my $class = ref $invocant ? ref $invocant : $invocant;
+    
+    # remove final part (A::Config -> A)
+    (my $module_base = $class) =~ s/::\w+\z//;
+
+    $module_base =~ s/::/_/g;
+    my $filename = $ENV{uc($module_base) . '_CONFIG_FILE'}
+                || lc($module_base) . '.yaml';
+
+    return $filename;
+  };
+
   @sub{qw(_default_filename _set_default_filename)}
     = $self->_build_default_filename_methods($arg);
 
@@ -178,8 +192,10 @@ sub _build_new {
 
     my $self = bless { } => $class;
 
+    $self->{basename} = $filename || $class->default_filename;
+
     $filename = $app_config->_find_file_in_path(
-      $filename || $class->default_filename,
+      $self->{basename},
       $arg->{path},
     );
 
@@ -210,24 +226,14 @@ sub _build_default_filename_methods {
   my $default_filename = sub {
     my ($invocant) = @_;
     
-    return $set_default if $set_default;
-
-    my $class = ref $invocant ? ref $invocant : $invocant;
-    
-    # remove final part (A::Config -> A)
-    (my $module_base = $class) =~ s/::\w+\z//;
-
-    $module_base =~ s/::/_/g;
-    my $filename = $ENV{uc($module_base) . '_CONFIG_FILE'}
-                || lc($module_base) . '.yml';
-
-    return $filename;
+    return $set_default ||= $invocant->default_filename_for_class;
   };
 
   my $set_default_filename = sub {
     my ($class, $filename) = @_;
     Carp::croak "can't change default filename, config already loaded!"
-      if $class->_default_object;
+      if  $class->_default_object
+      and $class->_default_object->{basename} ne $filename;
     $set_default = $filename;
   };
 
@@ -279,6 +285,8 @@ sub _build_import {
       }
     } elsif ($filename) {
       $class->_set_default_filename($filename);
+    } else {
+      $class->_set_default_filename($class->default_filename_for_class);
     }
 
     $class->_self;
