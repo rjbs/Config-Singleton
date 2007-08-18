@@ -5,8 +5,8 @@ use strict;
 
 use Cwd qw(realpath);
 use File::Basename;
-use File::HomeDir qw(home);
-use YAML qw(LoadFile);
+use File::HomeDir;
+use YAML::Syck;
 
 use Sub::Exporter -setup => {
   groups => [ setup => \'_build_config_methods' ],
@@ -205,7 +205,7 @@ sub _build_config_from_file {
       unless keys %{$class->template};
  
     my $config_file;
-    my $home = home;
+    my $home = File::HomeDir->my_home;
     my $path = dirname(realpath($0));
 
     # TODO will make this configurable later
@@ -228,7 +228,7 @@ sub _build_config_from_file {
       $config_file = $location . $config_filename;
     } until -e $config_file;
 
-    my $file_data = LoadFile($config_file);
+    my $file_data = YAML::Syck::LoadFile($config_file);
     $config = $app_config->_merge_data($class->template, $file_data);
     return $config;
   }
