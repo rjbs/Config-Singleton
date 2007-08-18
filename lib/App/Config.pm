@@ -141,20 +141,24 @@ sub _build_config_methods {
 
   my %sub; # This is the set of subs we're going to install in config classes.
 
-  $sub{config_filename}  = $self->_build_config_filename($arg);
-  $sub{config_from_file} = $self->_build_config_from_file($arg);
-  $sub{template}         = sub { $arg->{template} };
+  @sub{qw(_default_filename _set_default_filename)}
+    = $self->_build_default_filename_methods($arg);
 
-  # the import method generated will, I think, exist only to let you override 
-  # the default filename
-  $sub{import}           = $self->_build_import($arg);
+  $sub{config_from_file} = $self->_build_config_from_file($arg);
+  $sub{template}    = sub { $arg->{template} };
+  $sub{import}      = $self->_build_import($arg);
+
+  $sub{new} = $self->_build_new($arg);
 
   # XXX: implement default obj -- rjbs, 2007-08-18
   my $default;
   $sub{_self} = sub {
-    return $_[0] if ref $_[0];
-    return $default ||= (bless {} => shift);
+    my ($self) = @_;
+    return $self if ref $self;
+    return $default ||= $self->new($self->_default_filename);
   };
+
+  $sub{_default_object} = sub { $default };
 
   for my $attr (keys %{ $arg->{template} }) {
     Carp::croak "can't use reserved name $attr as config entry"
@@ -166,41 +170,71 @@ sub _build_config_methods {
   return \%sub;
 }
 
+sub _build_new {
+  my ($app_config, $arg) = @_;
+
+  sub {
+    my ($class, $filename) = @_;
+
+    my $self = bless { } => $class;
+
+    $filename = $app_config->_find_file_in_path(
+      $filename || $class->default_filename,
+      $arg->{path},
+    );
+
+    $self->{filename} = $filename;
+
+    return $self;
+  };
+}
+
 # Build accessors for all of $template
 sub _build_accessor {
   my ($class, $attr, $arg) = @_;
 
   return sub {
     my $self  = shift->_self;
-    
+
     exists $self->config_from_file->{$attr}
          ? $self->config_from_file->{$attr}
          : $arg->{$attr}
   };
 }
 
-# Returns the method later referred to as config_filename.
-#
-# config_filename, deduces what the name of the config file it should look for
-# will be.  Was it passed in, or should we guess based on the module name?
-sub _build_config_filename {
-  my ($class, $arg) = @_;
+sub _build_default_filename_methods {
+  my ($app_config, $arg) = @_;
 
-  sub {
-    my ($self) = @_;
-    my $class = ref $self ? ref $self : $self;
-  
-    unless ($arg->{filename}) {
-      # remove final part (A::Config -> A)
-      (my $module_base = $class) =~ s/::\w+\z//;
+  my $set_default;
 
-      $module_base =~ s/::/_/g;
-      $arg->{filename} = $ENV{uc($module_base) . '_CONFIG_FILE'}
-                      || lc($module_base) . '.yml';
-    }
+  my $default_filename = sub {
+    my ($invocant) = @_;
+    
+    return $set_default if $set_default;
 
-    return $arg->{filename};
-  }
+    my $class = ref $invocant ? ref $invocant : $invocant;
+    
+    # remove final part (A::Config -> A)
+    (my $module_base = $class) =~ s/::\w+\z//;
+
+    $module_base =~ s/::/_/g;
+    my $filename = $ENV{uc($module_base) . '_CONFIG_FILE'}
+                || lc($module_base) . '.yml';
+
+    return $filename;
+  };
+
+  my $set_default_filename = sub {
+    my ($class, $filename) = @_;
+    Carp::croak "can't change default filename, config already loaded!"
+      if $class->_default_object;
+    $set_default = $filename;
+  };
+
+  return (
+    $default_filename,
+    $set_default_filename,
+  );
 }
 
 # Returns the method later referred to as config_from_file.
@@ -210,13 +244,13 @@ sub _build_config_filename {
 # data.
 sub _build_config_from_file {
   my ($app_config, $arg) = @_;
- 
+
   return sub {
     my ($self) = shift->_self;
     return $self->{loaded_config} if $self->{loaded_config};
-    
+
     my $config_filename = $app_config->_find_file_in_path(
-      $self->config_filename,
+      $self->{filename},
       $arg->{path},
     );
 
@@ -233,7 +267,7 @@ sub _build_import {
   return sub {
     my ($class, $filename) = @_;
 
-    Carp::confess sprintf("import called on %s object", ref $class)
+    Carp::confess sprintf('import called on %s object', ref $class)
       if ref $class;
 
     if ($filename and $filename =~ /^-/) {
@@ -253,6 +287,11 @@ sub _build_import {
 
 sub _find_file_in_path {
   my ($self, $filename, $path) = @_;
+
+  if (File::Spec->file_name_is_absolute( $filename )) {
+    Carp::croak "config file $filename not found\n" unless -e $filename;
+    return $filename;
+  }
 
   $path ||= $self->_default_path;
 
@@ -284,12 +323,12 @@ sub _default_path {
 # issues with stupid references.
 sub _merge_data {
   my ($self, $template, $override) = @_;
-  
+
   my $merged = {};
   for (keys %$template) {
     $merged->{$_} = defined $override->{$_} ? $override->{$_} : $template->{$_};
   }
-  
+
   return $merged;
 }
 
