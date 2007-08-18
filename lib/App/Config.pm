@@ -3,10 +3,11 @@ package App::Config;
 use warnings;
 use strict;
 
-use Cwd qw(realpath);
-use File::Basename;
-use File::HomeDir;
-use YAML::Syck;
+use Cwd ();
+use File::Basename ();
+use File::HomeDir ();
+use File::Spec ();
+use YAML::Syck ();
 
 use Sub::Exporter -setup => {
   groups => [ setup => \'_build_config_methods' ],
@@ -144,6 +145,10 @@ sub _build_config_methods {
   $sub{config_from_file} = $self->_build_config_from_file($arg);
   $sub{template}         = sub { $arg->{template} };
 
+  # the import method generated will, I think, exist only to let you override 
+  # the default filename
+  $sub{import}           = $self->_build_import($arg);
+
   # XXX: implement default obj -- rjbs, 2007-08-18
   my $default;
   $sub{_self} = sub {
@@ -151,14 +156,8 @@ sub _build_config_methods {
     return $default ||= (bless {} => shift);
   };
 
-  # the import method generated will, I think, exist only to let you override 
-  # the default filename
-  $sub{import}           = $self->_build_import($arg);
-
   for my $attr (keys %{ $arg->{template} }) {
-    # To avoid this condition, consider making internal methods ALL CAPS or 
-    # something. -- rjbs
-    Carp::croak "can't use reserved word $attr as config entry"
+    Carp::croak "can't use reserved name $attr as config entry"
       if exists $sub{ $attr };
 
     $sub{ $attr } = $self->_build_accessor($attr, $arg);
@@ -212,42 +211,64 @@ sub _build_config_filename {
 sub _build_config_from_file {
   my ($app_config, $arg) = @_;
  
-  my $config;
   return sub {
     my ($self) = shift->_self;
-
-    return $config if $config;
+    return $self->{loaded_config} if $self->{loaded_config};
     
-    my $class = shift;
-    die "You must define your configurable parameters in the template sub"
-      unless keys %{$class->template};
- 
-    my $config_file;
+    my $config_filename = $app_config->_find_file_in_path(
+      $self->config_filename,
+      $arg->{path},
+    );
 
-    my $config_filename = $class->config_filename; 
+    my $file_data = YAML::Syck::LoadFile($config_filename);
+    my $config = $app_config->_merge_data($self->template, $file_data);
 
-    my @locations = $arg->{path}
-                  ? @{ $arg->{path} }
-                  : $app_config->_default_path;
-
-    do {
-      die "Config file not found: $config_filename" unless scalar(@locations);
-      my $location = shift @locations;
-      $config_file = $location . $config_filename;
-    } until -e $config_file;
-
-    my $file_data = YAML::Syck::LoadFile($config_file);
-    $config = $app_config->_merge_data($class->template, $file_data);
-    $arg->{_loaded_config} = $config_file;
-    return $config;
+    return $self->{loaded_config} = $config;
   }
+}
+
+sub _build_import {
+  my ($app_config, $arg) = @_;
+
+  return sub {
+    my ($class, $filename) = @_;
+
+    Carp::confess sprintf("import called on %s object", ref $class)
+      if ref $class;
+
+    if ($filename and $filename =~ /^-/) {
+      if ($filename eq '-client') {
+        return if $class->_default_object;
+        Carp::croak "$class not configured yet, but got -client directive";
+      } else {
+        Carp::croak "unknown directive for $class: $filename";
+      }
+    } elsif ($filename) {
+      $class->_set_default_filename($filename);
+    }
+
+    $class->_self;
+  }
+}
+
+sub _find_file_in_path {
+  my ($self, $filename, $path) = @_;
+
+  $path ||= $self->_default_path;
+
+  for my $dir (@$path) {
+    my $this_file = File::Spec->catfile($dir, $filename);
+    return $this_file if -e $this_file;
+  };
+
+  Carp::croak "config file $filename not found in path (@$path)\n";
 }
 
 sub _default_path {
   my $home = File::HomeDir->my_home;
-  my $path = dirname(realpath($0));
+  my $path = File::Basename::dirname(Cwd::realpath($0));
 
-  my @locations = (
+  return [
     q{},
     q{./},
     q{../},
@@ -256,7 +277,7 @@ sub _default_path {
     qq{$home/.},
     q{/usr/local/etc/},
     q{/etc/},
-  );
+  ];
 }
 
 # In the future, using Clone here might be a good idea to avoid
@@ -270,22 +291,6 @@ sub _merge_data {
   }
   
   return $merged;
-}
-
-sub _build_import {
-  my ($app_config, $arg) = @_;
-
-  return sub {
-    my ($self, $filename) = @_;
-
-    if ($filename) {
-      if ($arg->{_loaded_config} and $arg->{_loaded_config} ne $filename) {
-        Carp::croak "can't change default filename; already loaded $arg->{_loaded_config}";
-      }
-      $arg->{filename} = $filename;
-      $self->config_from_file;
-    }
-  }
 }
 
 =head1 AUTHOR
