@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 10;
+use Test::More tests => 11;
 
 use lib 't/lib';
 
@@ -21,3 +21,7 @@ isa_ok($config_2, 'MyApp::Config');
 is($config_2->username, 'ba baracus', 'got username value from object');
 is(MyApp::Config->username, 'faceman', 'but class method remains unchanged');
 is($config->username, 'hm murdock', 'so does the previous object');
+
+# Honestly, why would you do this?
+eval { $config->import };
+like($@, qr/import called on.+object/, "import is a class method only");
