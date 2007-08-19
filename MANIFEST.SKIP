@@ -1,0 +1,10 @@
+Makefile*
+!Makefile.PL
+
+MANIFEST*
+!MANIFEST
+
+cover_db
+.git
+blib
+pm_to_blib
