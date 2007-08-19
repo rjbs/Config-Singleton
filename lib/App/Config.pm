@@ -101,14 +101,13 @@ Then these are the results of method calls on Your::Config:
   Your::Config->path;     # qw(/var/spool/jobs  /home/rjbs/spool/jobs)
 
 The configuration file is found by looking for the given name in the following
-paths (LOC is the location of the program being run, found in C<$0>):
+paths (F<LOC> is the location of the program being run, found via C<$0>):
 
   ./
   ../
   LOC/
   LOC/../etc/
   ~/
-  /usr/local/etc/
   /etc/
 
 You can change the paths checked by providing a F<path> argument in the setup
@@ -237,7 +236,6 @@ sub _build_default_object_methods {
   );
 }
 
-
 sub _build_import {
   my ($app_config, $arg) = @_;
 
@@ -312,18 +310,20 @@ sub _default_path {
     qq{$path/},
     qq{$path/../etc/},
     qq{$home/.},
-    q{/usr/local/etc/},
     q{/etc/},
   ];
 }
 
-# In the future, using Clone here might be a good idea to avoid
-# issues with stupid references.
+# In the future, using Clone here might be a good idea to avoid issues with
+# stupid references.
 sub _merge_data {
   my ($self, $template, $override) = @_;
 
   my $merged = {};
+
   for (keys %$template) {
+    # Should we be preventing the config file's entry from having a different
+    # data type than the template value?  -- rjbs, 2007-08-18
     $merged->{$_} = defined $override->{$_} ? $override->{$_} : $template->{$_};
   }
 
