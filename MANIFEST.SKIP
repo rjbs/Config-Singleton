@@ -1,8 +1,5 @@
-Makefile*
-!Makefile.PL
-
-MANIFEST*
-!MANIFEST
+^Makefile$
+MANIFEST.+
 
 \.git
 \.DS_Store
@@ -10,3 +7,5 @@ MANIFEST*
 cover_db
 blib
 pm_to_blib
+
+App-Config-.*
