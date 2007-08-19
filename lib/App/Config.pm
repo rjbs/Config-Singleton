@@ -163,18 +163,7 @@ sub _build_config_methods {
   return \%sub;
 }
 
-sub _default_filename_for_class {
-  my ($app_config, $class) = @_;
-  
-  # remove final part (A::Config -> A)
-  (my $module_base = $class) =~ s/::\w+\z//;
-
-  $module_base =~ s/::/_/g;
-  my $filename = $ENV{uc($module_base) . '_CONFIG_FILE'}
-              || lc($module_base) . '.yaml';
-
-  return $filename;
-}
+## METHODS THAT BUILD METHODS TO INSTALL
 
 sub _build_new {
   my ($app_config, $arg) = @_;
@@ -248,7 +237,6 @@ sub _build_default_object_methods {
   );
 }
 
-sub _load_file { YAML::Syck::LoadFile($_[1]); }
 
 sub _build_import {
   my ($app_config, $arg) = @_;
@@ -277,6 +265,23 @@ sub _build_import {
     $class->_self;
   }
 }
+
+# METHODS FOR THINGS TO CALL ON APP::CONFIG
+
+sub _default_filename_for_class {
+  my ($app_config, $class) = @_;
+  
+  # remove final part (A::Config -> A)
+  (my $module_base = $class) =~ s/::\w+\z//;
+
+  $module_base =~ s/::/_/g;
+  my $filename = $ENV{uc($module_base) . '_CONFIG_FILE'}
+              || lc($module_base) . '.yaml';
+
+  return $filename;
+}
+
+sub _load_file { YAML::Syck::LoadFile($_[1]); }
 
 sub _find_file_in_path {
   my ($self, $filename, $path) = @_;
