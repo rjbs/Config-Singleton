@@ -141,28 +141,15 @@ sub _build_config_methods {
 
   my %sub; # This is the set of subs we're going to install in config classes.
 
-  $sub{default_filename_for_class} = sub {
-    my ($invocant) = @_;
-    my $class = ref $invocant ? ref $invocant : $invocant;
-    
-    # remove final part (A::Config -> A)
-    (my $module_base = $class) =~ s/::\w+\z//;
-
-    $module_base =~ s/::/_/g;
-    my $filename = $ENV{uc($module_base) . '_CONFIG_FILE'}
-                || lc($module_base) . '.yaml';
-
-    return $filename;
-  };
-
   @sub{qw(_default_filename _set_default_filename)}
     = $self->_build_default_filename_methods($arg);
 
-  $sub{config_from_file} = $self->_build_config_from_file($arg);
-  $sub{template}    = sub { $arg->{template} };
-  $sub{import}      = $self->_build_import($arg);
+  $sub{_template} = sub { $arg->{template} };
+  $sub{_config}   = sub { shift->_self->{config} };
 
-  $sub{new} = $self->_build_new($arg);
+
+  $sub{import} = $self->_build_import($arg);
+  $sub{new}    = $self->_build_new($arg);
 
   # XXX: implement default obj -- rjbs, 2007-08-18
   my $default;
@@ -178,10 +165,27 @@ sub _build_config_methods {
     Carp::croak "can't use reserved name $attr as config entry"
       if exists $sub{ $attr };
 
-    $sub{ $attr } = $self->_build_accessor($attr, $arg);
+    $sub{ $attr } = sub {
+      my $value = shift->_self->_config->{$attr};
+      return @$value if (ref $value || q{}) eq 'ARRAY'; # XXX: use _ARRAYLIKE
+      return $value;
+    };
   }
 
   return \%sub;
+}
+
+sub _default_filename_for_class {
+  my ($self, $class) = @_;
+  
+  # remove final part (A::Config -> A)
+  (my $module_base = $class) =~ s/::\w+\z//;
+
+  $module_base =~ s/::/_/g;
+  my $filename = $ENV{uc($module_base) . '_CONFIG_FILE'}
+              || lc($module_base) . '.yaml';
+
+  return $filename;
 }
 
 sub _build_new {
@@ -201,22 +205,21 @@ sub _build_new {
 
     $self->{filename} = $filename;
 
+    $self->{config} = $app_config->_merge_data(
+      $self->_template,
+      $app_config->_load_file(
+        $app_config->_find_file_in_path(
+          $self->{filename},
+          $arg->{path},
+        ),
+      ),
+    );
+
     return $self;
   };
 }
 
 # Build accessors for all of $template
-sub _build_accessor {
-  my ($class, $attr, $arg) = @_;
-
-  return sub {
-    my $self  = shift->_self;
-
-    exists $self->config_from_file->{$attr}
-         ? $self->config_from_file->{$attr}
-         : $arg->{$attr}
-  };
-}
 
 sub _build_default_filename_methods {
   my ($app_config, $arg) = @_;
@@ -226,14 +229,14 @@ sub _build_default_filename_methods {
   my $default_filename = sub {
     my ($invocant) = @_;
     
-    return $set_default ||= $invocant->default_filename_for_class;
+    return $set_default ||= $app_config->_default_filename_for_class;
   };
 
   my $set_default_filename = sub {
     my ($class, $filename) = @_;
     Carp::croak "can't change default filename, config already loaded!"
-      if  $class->_default_object
-      and $class->_default_object->{basename} ne $filename;
+      if  $set_default
+      and $set_default ne $filename;
     $set_default = $filename;
   };
 
@@ -243,29 +246,7 @@ sub _build_default_filename_methods {
   );
 }
 
-# Returns the method later referred to as config_from_file.
-#
-# config_from_file returns the config data, if loaded.  If it hasn't already
-# been loaded, it finds and parses the configuration file, then returns the
-# data.
-sub _build_config_from_file {
-  my ($app_config, $arg) = @_;
-
-  return sub {
-    my ($self) = shift->_self;
-    return $self->{loaded_config} if $self->{loaded_config};
-
-    my $config_filename = $app_config->_find_file_in_path(
-      $self->{filename},
-      $arg->{path},
-    );
-
-    my $file_data = YAML::Syck::LoadFile($config_filename);
-    my $config = $app_config->_merge_data($self->template, $file_data);
-
-    return $self->{loaded_config} = $config;
-  }
-}
+sub _load_file { YAML::Syck::LoadFile($_[1]); }
 
 sub _build_import {
   my ($app_config, $arg) = @_;
@@ -286,7 +267,9 @@ sub _build_import {
     } elsif ($filename) {
       $class->_set_default_filename($filename);
     } else {
-      $class->_set_default_filename($class->default_filename_for_class);
+      $class->_set_default_filename(
+        $app_config->_default_filename_for_class($class)
+      );
     }
 
     $class->_self;
