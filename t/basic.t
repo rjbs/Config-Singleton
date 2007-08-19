@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 use lib 't/lib';
 
@@ -12,3 +12,8 @@ is( MyApp::Config->hostname, 'localhost', 'Default config value expected');
  
 is( MyApp::Config->username, 'faceman', 'Overriden config value expected');
 
+is_deeply(
+  [ MyApp::Config->clothes ],
+  [ qw(top pants flipflops) ],
+  "arrayrefs flatten to lists",
+);

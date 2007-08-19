@@ -289,7 +289,7 @@ sub _find_file_in_path {
     return $filename;
   }
 
-  $path ||= $self->_default_path;
+  $path = $self->_default_path unless defined $path;
 
   for my $dir (@$path) {
     my $this_file = File::Spec->catfile($dir, $filename);

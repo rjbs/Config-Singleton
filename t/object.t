@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 11;
+use Test::More tests => 13;
 
 use lib 't/lib';
 
@@ -10,11 +10,21 @@ BEGIN {
 
 is( MyApp::Config->hostname, 'localhost', 'Default config value expected');
 is( MyApp::Config->username, 'faceman', 'Overriden config value expected');
+is_deeply(
+  [ MyApp::Config->clothes ],
+  [ qw(top pants flipflops) ],
+  "we get the default list of clothes from the class",
+);
 
 my $config = MyApp::Config->new('etc/obj-1.yaml');
 isa_ok($config, 'MyApp::Config');
 is($config->username, 'hm murdock', 'got username value from object');
 is(MyApp::Config->username, 'faceman', 'but class method remains unchanged');
+is_deeply(
+  [ $config->clothes ],
+  [ qw(hat socks) ],
+  "we get the list of clothes from the obj-1",
+);
 
 my $config_2 = MyApp::Config->new('etc/obj-2.yaml');
 isa_ok($config_2, 'MyApp::Config');

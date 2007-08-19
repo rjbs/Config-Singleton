@@ -6,6 +6,7 @@ use App::Config -setup => {
     hostname => 'localhost',
     username => undef,
     charset  => 'ISO-8859-1',
+    clothes  => [ qw(top pants flipflops) ],
   },
 };
 
