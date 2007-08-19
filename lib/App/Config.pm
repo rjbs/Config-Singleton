@@ -137,29 +137,17 @@ in the meantime, don't rely on them.
 sub _build_config_methods {
   my ($self, $name, $arg) = @_;
 
-  # validate $arg here -- rjbs
+  # XXX: validate $arg here -- rjbs
 
-  my %sub; # This is the set of subs we're going to install in config classes.
-
-  @sub{qw(_default_filename _set_default_filename)}
-    = $self->_build_default_filename_methods($arg);
-
-  $sub{_template} = sub { $arg->{template} };
-  $sub{_config}   = sub { shift->_self->{config} };
-
-
-  $sub{import} = $self->_build_import($arg);
-  $sub{new}    = $self->_build_new($arg);
-
-  # XXX: implement default obj -- rjbs, 2007-08-18
-  my $default;
-  $sub{_self} = sub {
-    my ($self) = @_;
-    return $self if ref $self;
-    return $default ||= $self->new($self->_default_filename);
-  };
-
-  $sub{_default_object} = sub { $default };
+  # This is the set of subs we're going to install in config classes.
+  my %sub = (
+    $self->_build_default_filename_methods($arg),
+    $self->_build_default_object_methods($arg),
+    _template  => sub { $arg->{template} },
+    _config    => sub { shift->_self->{config} },
+    import     => $self->_build_import($arg),
+    new        => $self->_build_new($arg),
+  );
 
   for my $attr (keys %{ $arg->{template} }) {
     Carp::croak "can't use reserved name $attr as config entry"
@@ -176,7 +164,7 @@ sub _build_config_methods {
 }
 
 sub _default_filename_for_class {
-  my ($self, $class) = @_;
+  my ($app_config, $class) = @_;
   
   # remove final part (A::Config -> A)
   (my $module_base = $class) =~ s/::\w+\z//;
@@ -219,17 +207,14 @@ sub _build_new {
   };
 }
 
-# Build accessors for all of $template
-
 sub _build_default_filename_methods {
   my ($app_config, $arg) = @_;
 
   my $set_default;
 
-  my $default_filename = sub {
-    my ($invocant) = @_;
-    
-    return $set_default ||= $app_config->_default_filename_for_class;
+  my $get_default_filename = sub {
+    my ($self) = @_;
+    return $set_default ||= $app_config->_default_filename_for_class($self);
   };
 
   my $set_default_filename = sub {
@@ -241,8 +226,25 @@ sub _build_default_filename_methods {
   };
 
   return (
-    $default_filename,
-    $set_default_filename,
+    _get_default_filename => $get_default_filename,
+    _set_default_filename => $set_default_filename,
+  );
+}
+
+sub _build_default_object_methods {
+  my ($app_config) = @_;
+
+  my $default;
+
+  my $_self = sub {
+    my ($self) = @_;
+    return $self if ref $self;
+    return $default ||= $self->new($self->_get_default_filename);
+  };
+
+  return (
+    _self           => $_self,
+    _default_object => sub { $default },
   );
 }
 
