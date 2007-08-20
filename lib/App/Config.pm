@@ -100,8 +100,36 @@ Then these are the results of method calls on Your::Config:
 
   Your::Config->path;     # qw(/var/spool/jobs  /home/rjbs/spool/jobs)
 
-The configuration file is found by looking for the given name in the following
-paths (F<LOC> is the location of the program being run, found via C<$0>):
+=head2 Specifying a Config File
+
+App::Config finds a config file via a series of DWIM-my steps that are probably
+more complicated to explain than they are to understand.
+
+The F<filename> argument given when using App::Config is the name of the
+file that will, by default, be loaded to find configuration.  It may be
+absolute or relative.  If not given, it's computed as follows:  the "module
+base name" is made by dropping the last part of the class name, if it's
+multi-part, and double colons become underscores.  In other words
+"Your::Thing::Config" becomes "Your_Thing."  If the environment variable
+YOUR_THING_CONFIG_FILE is set, that will be used as the default.  If not,
+F<your_thing.yaml> will be used.
+
+The named file will be the source of configuration for the global (class
+method) configuration.  It can be overridden, however, when using the config
+module.  For example, after using the following code:
+
+  use Your::Thing::Config 'special.yaml';
+
+...the default name will have been replaced with F<special.yaml>.  If the
+previous default file has already been loaded, this will throw an exception.
+Using the module without specifying a filename will defer loading of the
+configuration file until it's needed.  To force it to be loaded without setting
+an explicit filename, pass C<-load> as the filename.  (All names beginning
+with a dash are reserved.)
+
+If the filename is relative, the configuration file is found by looking for the
+file name in the following paths (F<LOC> is the location of the program being
+run, found via C<$0>):
 
   ./
   ../
@@ -110,17 +138,20 @@ paths (F<LOC> is the location of the program being run, found via C<$0>):
   ~/
   /etc/
 
-You can change the paths checked by providing a F<path> argument in the setup
-arguments.
+You can change the paths checked by providing a F<path> argument, as an
+arrayref, in the setup arguments.
 
-If you'd rather look for a different filename, you can specify it when using
-Your::Config:
+=head2 Alternate Configuration Objects
 
-  use Your::Config 'alt.yaml';
+Although it's generally preferable to begin your program by forcing the loading
+of a configuration file and then using the global configuration, it's possible
+to have multiple Your::Thing::Config configurations loaded by instantiating
+objects of that class, like this:
 
-When Your::Config is loaded in this way, it will look for the given filename
-instead of the default one.  If it is loaded again with a different filename
-given, an exception will be raised.
+  my $config_obj = Your::Thing::Config->new($filename);
+
+The named file is found via the same path resolution (if it's relative) as
+described above.
 
 =head1 METHODS
 
