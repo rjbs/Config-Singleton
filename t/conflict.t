@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 use lib 't/lib';
 
@@ -8,6 +8,11 @@ require_ok('MyApp::Config');
 
 eval { MyApp::Config->import; };
 is($@, '', 'we can import MyApp::Config once (with no arguments)');
+
+ok(
+  MyApp::Config->hostname,
+  "then we can get data from the config",
+);
 
 eval { MyApp::Config->import; };
 is($@, '', 'we can import MyApp::Config again (with no arguments)');

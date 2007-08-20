@@ -245,19 +245,15 @@ sub _build_import {
     Carp::confess sprintf('import called on %s object', ref $class)
       if ref $class;
 
-    if ($filename and $filename =~ /^-/) {
-      if ($filename eq '-client') {
-        return if $class->_default_object;
-        Carp::croak "$class not configured yet, but got -client directive";
-      } else {
-        Carp::croak "unknown directive for $class: $filename";
+    return unless defined $filename and length $filename;
+
+    if ($filename =~ /^-/) {
+      if ($filename eq '-load') {
+        return $class->_self;
       }
-    } elsif ($filename) {
-      $class->_set_default_filename($filename);
+      Carp::croak "unknown directive for $class: $filename";
     } else {
-      $class->_set_default_filename(
-        $app_config->_default_filename_for_class($class)
-      );
+      $class->_set_default_filename($filename);
     }
 
     $class->_self;
