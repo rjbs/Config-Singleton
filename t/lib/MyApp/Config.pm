@@ -1,6 +1,6 @@
 package MyApp::Config;
 
-use App::Config -setup => {
+use Config::Singleton -setup => {
   filename => 'myapp.yml',
   template => {
     hostname => 'localhost',

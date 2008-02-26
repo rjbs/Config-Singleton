@@ -4,11 +4,11 @@ use Test::More tests => 2;
 
 use lib 't/lib';
 
-require_ok('App::Config');
+require_ok('Config::Singleton');
 
 eval {
   package YourApp::Config;
-  App::Config->import(-setup => {
+  Config::Singleton->import(-setup => {
     template => { import => undef },
   });
 };

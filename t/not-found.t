@@ -3,11 +3,11 @@
 use File::Spec;
 use Test::More tests => 3;
 
-require_ok('App::Config');
+require_ok('Config::Singleton');
 
 {
   package ThisApp::Config;
-  App::Config->import( -setup => {
+  Config::Singleton->import( -setup => {
     path     => [ 'etc' ],
     template => { foo => 1 },
   });

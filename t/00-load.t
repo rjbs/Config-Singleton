@@ -3,7 +3,7 @@
 use Test::More tests => 1;
 
 BEGIN {
-	use_ok( 'App::Config' );
+	use_ok( 'Config::Singleton' );
 }
 
-diag( "Testing App::Config $App::Config::VERSION, Perl $], $^X" );
+diag( "Testing Config::Singleton $Config::Singleton::VERSION, Perl $], $^X" );
