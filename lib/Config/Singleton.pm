@@ -1,4 +1,4 @@
-package App::Config;
+package Config::Singleton;
 
 use warnings;
 use strict;
@@ -15,7 +15,7 @@ use Sub::Exporter -setup => {
 
 =head1 NAME
 
-App::Config - Easy configuration base class for your App.
+Config::Singleton - one place for your app's configuration
 
 =head1 VERSION
 
@@ -29,7 +29,7 @@ our $VERSION = '0.001';
 
   package YourApplication::Config;
 
-  use App::Config -setup => {
+  use Config::Singleton -setup => {
     filename => 'something.yaml',
     template => {
       foo => undef,
@@ -46,9 +46,9 @@ Elsewhere...
 
 =head1 DESCRIPTION
 
-App::Config provides a base class for access to configuration data for your
-app. The basic implementation stores its configuration in YAML in a text
-file found in all the usual places. By default, App::Config looks for
+Config::Singleton provides a base class for access to configuration data for
+your app. The basic implementation stores its configuration in YAML in a text
+file found in all the usual places. By default, Config::Singleton looks for
 myapp.yml, but an alternate filename may be passed when using the module.
 
 This module was derived from L<Rubric::Config|Rubric::Config>.
@@ -56,14 +56,15 @@ This module was derived from L<Rubric::Config|Rubric::Config>.
 =head1 USING APP::CONFIG
 
 The L</SYNOPSIS> section, above, demonstrates an example of almost every
-feature of App::Config.  It's a very simple module with a very small interface.
+feature of Config::Singleton  It's a very simple module with a very small
+interface.
 
 It is not a base class.  It is a utility for setting up a class that stores
 loaded configuration data.  You just need to C<use> the module like this:
 
   package Your::Config;
 
-  use App::Config -setup => {
+  use Config::Singleton -setup => {
     filename => 'your_program.yaml',
     template => {
       username => undef,
@@ -102,10 +103,11 @@ Then these are the results of method calls on Your::Config:
 
 =head2 Specifying a Config File
 
-App::Config finds a config file via a series of DWIM-my steps that are probably
+Config::Singleton finds a config file via a series of DWIM-my steps that are
+probably
 more complicated to explain than they are to understand.
 
-The F<filename> argument given when using App::Config is the name of the
+The F<filename> argument given when using Config::Singleton is the name of the
 file that will, by default, be loaded to find configuration.  It may be
 absolute or relative.  If not given, it's computed as follows:  the "module
 base name" is made by dropping the last part of the class name, if it's
@@ -155,10 +157,10 @@ described above.
 
 =head1 METHODS
 
-App::Config doesn't actually have any real public methods of its own.  Its
-methods are all private, and serve to power its C<import> routine.  These will
-probably be exposed in the future to allow for subclassing of App::Config, but
-in the meantime, don't rely on them.
+Config::Singleton doesn't actually have any real public methods of its own.
+Its methods are all private, and serve to power its C<import> routine.  These
+will probably be exposed in the future to allow for subclassing of
+Config::Singleton, but in the meantime, don't rely on them.
 
 =cut
 
@@ -366,7 +368,7 @@ Ricardo SIGNES, C<< <rjbs at cpan.org> >>
 =head1 BUGS
 
 Please report any bugs or feature requests through the web interface at
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=App-Config>.  I will be
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Config::Singleton>.  I will be
 notified, and then you'll automatically be notified of progress on your bug as
 I make changes.
 
@@ -374,7 +376,7 @@ I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc App::Config
+    perldoc Config::Singleton
 
 You can also look for information at:
 
@@ -382,15 +384,15 @@ You can also look for information at:
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/App-Config>
+L<http://cpanratings.perl.org/d/Config::Singleton>
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=App-Config>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Config::Singleton>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/App-Config>
+L<http://search.cpan.org/dist/Config::Singleton>
 
 =back
 
@@ -414,7 +416,7 @@ can say without being boastful, because he wrote the elegant bits.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2006, John Cappiello.
+Copyright 2008, John Cappiello.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

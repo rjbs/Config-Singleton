@@ -4,8 +4,8 @@ use warnings;
 use inc::Module::Install;
 
 author   'John Cappiello <jcap@cpan.org>';
-name     'App-Config';
-all_from 'lib/App/Config.pm';
+name     'Config-Singleton';
+all_from 'lib/Config/Singleton.pm';
 
 build_requires 'Test::More' => 0;
 
