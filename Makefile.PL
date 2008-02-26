@@ -16,5 +16,7 @@ requires 'File::Spec'     => 0; # core since 5.00405
 requires 'Sub::Exporter'  => 0.972; # for name-ref for generator
 requires 'YAML::Syck'     => 0; # minimum unknown
 
+author_tests 'xt';
+
 auto_install;
 WriteAll;
