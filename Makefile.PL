@@ -18,5 +18,4 @@ requires 'YAML::Syck'     => 0; # minimum unknown
 
 author_tests 'xt';
 
-auto_install;
 WriteAll;

@@ -1,5 +1,8 @@
 Revision history for Config-Singleton
 
+0.002     2013-04-25
+          ditch autoinstall
+
 0.001     2008-02-25
           first public release, at long last
 
