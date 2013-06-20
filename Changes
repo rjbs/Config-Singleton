@@ -1,6 +1,8 @@
 Revision history for Config-Singleton
 
 {{$NEXT}}
+
+0.003     2013-06-20 15:51:27 America/New_York
           ditch Module::Install
 
           use YAML::XS instead of YAML::Syck
