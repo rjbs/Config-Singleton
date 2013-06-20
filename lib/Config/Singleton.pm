@@ -1,30 +1,18 @@
-package Config::Singleton;
-
 use 5.006;
 use warnings;
 use strict;
+package Config::Singleton;
+# ABSTRACT: one place for your app's configuration
 
 use Cwd ();
 use File::Basename ();
 use File::HomeDir ();
 use File::Spec ();
-use YAML::Syck ();
+use YAML::XS ();
 
 use Sub::Exporter -setup => {
   groups => [ setup => \'_build_config_methods' ],
 };
-
-=head1 NAME
-
-Config::Singleton - one place for your app's configuration
-
-=head1 VERSION
-
-version 0.002
-
-=cut
-
-our $VERSION = '0.002';
 
 =head1 SYNOPSIS
 
@@ -298,7 +286,7 @@ sub _build_import {
 
 sub _default_filename_for_class {
   my ($app_config, $class) = @_;
-  
+
   # remove final part (A::Config -> A)
   (my $module_base = $class) =~ s/::\w+\z//;
 
@@ -309,7 +297,7 @@ sub _default_filename_for_class {
   return $filename;
 }
 
-sub _load_file { YAML::Syck::LoadFile($_[1]); }
+sub _load_file { YAML::XS::LoadFile($_[1]); }
 
 sub _find_file_in_path {
   my ($self, $filename, $path) = @_;
@@ -360,52 +348,11 @@ sub _merge_data {
   return $merged;
 }
 
-=head1 AUTHOR
-
-John Cappiello, C<< <jcap at cpan.org> >>
-
-Ricardo SIGNES, C<< <rjbs at cpan.org> >>
-
-=head1 BUGS
-
-Please report any bugs or feature requests through the web interface at
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Config::Singleton>.  I will be
-notified, and then you'll automatically be notified of progress on your bug as
-I make changes.
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Config::Singleton
-
-You can also look for information at:
-
-=over 4
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Config::Singleton>
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Config::Singleton>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Config::Singleton>
-
-=back
-
 =head1 TODO
 
-=over 4
-
-=item * a ->new method to allow loading different configs
-
-=item * a way to tell Your::Config, with no explicit filename, to die unless a filename was specified by an earlier use
-
-=back
+=for :list
+* a ->new method to allow loading different configs
+* a way to tell Your::Config, with no explicit filename, to die unless a filename was specified by an earlier use
 
 =head1 ACKNOWLEDGEMENTS
 
@@ -414,13 +361,6 @@ he also basically wrote the majority of the implementation here, and even
 provided extensions of what he knew I wanted it to do, even when I said I
 didn't need that yet. In the end it ended up being extremely elegant, which I
 can say without being boastful, because he wrote the elegant bits.
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright 2008, John Cappiello.
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
 
 =cut
 
