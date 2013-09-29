@@ -2,6 +2,9 @@ Revision history for Config-Singleton
 
 {{$NEXT}}
 
+0.004     2013-09-28 20:36:16 America/New_York
+          update butracker and repo (thanks, David Steinbrunner)
+
 0.003     2013-06-20 15:51:27 America/New_York
           ditch Module::Install
 
