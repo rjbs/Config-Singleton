@@ -224,7 +224,8 @@ sub _build_default_filename_methods {
 
   my $get_default_filename = sub {
     my ($self) = @_;
-    return $set_default ||= $app_config->_default_filename_for_class($self);
+    return $set_default ||= $arg->{filename}
+                        ||  $app_config->_default_filename_for_class($self);
   };
 
   my $set_default_filename = sub {
