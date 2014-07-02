@@ -1,6 +1,8 @@
 Revision history for Config-Singleton
 
 {{$NEXT}}
+
+0.005     2014-07-02 19:13:13-04:00 America/New_York
         - try to stop ignoring the "filename" argument in -setup
 
 0.004     2013-09-28 20:36:16 America/New_York
