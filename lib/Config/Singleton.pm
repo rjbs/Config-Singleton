@@ -1,4 +1,3 @@
-use 5.006;
 use warnings;
 use strict;
 package Config::Singleton;
